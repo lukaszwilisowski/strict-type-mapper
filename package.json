@@ -26,6 +26,7 @@
   "dependencies": {},
   "devDependencies": {
     "ts-jest": "^28.0.5",
-    "typescript": "^4.7.4"
+    "typescript": "^4.7.4",
+    "reflect-metadata": "^0.1.13"
   }
 }
