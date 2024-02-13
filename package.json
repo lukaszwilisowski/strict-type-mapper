@@ -1,0 +1,31 @@
+{
+  "name": "strict-type-mapper",
+  "author": "Lukasz Wilisowski",
+  "version": "1.0.1",
+  "description": "",
+  "license": "ISC",
+  "keywords": [
+    "strict",
+    "type",
+    "mapper"
+  ],
+  "exports": {
+    ".": "./index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lukaszwilisowski/strict-type-mapper.git"
+  },
+  "module": "esnext",
+  "scripts": {
+    "build": "tsc -p ./tsconfig.build.json",
+    "test": "jest --config ./test/jest.unit.config.json",
+    "test:db": "jest --config ./test/jest.integration.config.json",
+    "prepare": "npm version patch && copy package.json dist && copy LICENSE dist && copy README.md dist"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "ts-jest": "^28.0.5",
+    "typescript": "^4.7.4"
+  }
+}
