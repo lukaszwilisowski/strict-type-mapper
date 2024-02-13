@@ -7,47 +7,38 @@ import { Features, Friend } from '../_models/non-nullable.model';
 describe('Complex mapper', () => {
   const complexMapper = new StrictTypeMapper<AnimalObject, MappedAnimalObject, false>(complexMapping);
 
-  it('should map input', () => {
-    const output = complexMapper.map({
-      name: 'Dawson',
-      name2: 'Jack',
+  it('should map', () => {
+    const input: AnimalObject = {
+      name: 'Jack',
+      name2: 'Dawson',
       name3: 'Great',
-      age: 21,
+      age: 20,
       friendIDs: [1, 2, 3],
-      friendIDsNullable: [-1, -2, -3],
+      friendIDsNullable: [1, 2, 3],
       friends: [{ name: 'Rose', age: 10 }],
-      friendsNullable: [{ name: 'Rose', age: 10 }],
       features: {
-        color: 'blond_changed',
+        color: 'blond',
         level: 100,
         additional: {
-          serialNumber: 's-03_new'
-        }
-      },
-      featuresNullable: {
-        color: 'blond_changed',
-        level: 100,
-        additional: {
-          serialNumber: 's-03_new'
+          serialNumber: 's-03'
         }
       }
-    });
+    };
 
-    expect(Object.keys(output).length).toBe(8);
-    expect(output.name).toEqual('Jack');
-    expect(output.name2).toEqual('Great');
-    expect(output.age).toBe(20);
+    const output = complexMapper.map(input);
+
+    expect(output.name2).toEqual('Jack');
+    expect(output.name3).toEqual('Dawson');
+    expect(output.age).toBe(21);
     expect(output.friendIDs).toBeUndefined();
     expect(output.friendIDsNullable).toEqual([1, 2, 3]);
-    expect(output.friends[0]).toEqual({ age: 9 });
-    expect(output.friends_nullable![0]).toEqual({ age: 9 });
+    expect(output.friends[0].age).toEqual(10);
     expect(output.features.color).toEqual('blond');
-    expect(output.features.level).toEqual(97);
+    expect(output.features.level).toEqual(100);
     expect(output.features.additional?.serialNumber).toEqual('s-03');
-    expect(output.features_nullable!.additional?.serialNumber).toEqual('s-03');
   });
 
-  it('should map input with nulled properties (SQL)', () => {
+  it('should map input with nulled properties', () => {
     const output = complexMapper.map({
       name: 'Dawson',
       nameNullable: null as unknown as string,

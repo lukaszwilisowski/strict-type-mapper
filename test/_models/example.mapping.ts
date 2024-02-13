@@ -38,7 +38,7 @@ export const complexMapping: Mapping<AnimalObject, MappedAnimalObject, false> = 
   name2: 'name3',
   nameNullable: MapTo.Property(
     'nameNullable',
-    (objectName: string) => objectName.toUpperCase(),
+    (objectName: string) => objectName?.toUpperCase(),
     (entityName: string | null) => entityName?.toLowerCase() || 'default'
   ),
   age: MapTo.Property(

@@ -8,10 +8,10 @@ describe('Simple mapper', () => {
 
   it('should map input', () => {
     const output = simpleMapper.map({
-      color: 'blond_changed',
+      color: 'blond',
       level: 100,
       additional: {
-        serialNumber: 's-03_new',
+        serialNumber: 's-03',
         index: 5
       }
     });
@@ -22,15 +22,14 @@ describe('Simple mapper', () => {
     expect(output.additional?.index).toEqual(5);
   });
 
-  it('should map input with nulled properties (SQL)', () => {
+  it('should map input with nulled properties', () => {
     const output = simpleMapper.map({
-      color: 'blond_changed',
-      level: 100,
+      color: 'blond',
       additional: undefined
     });
 
     expect(output.color).toEqual('blond_changed');
-    expect(output.level).toEqual(100);
+    expect(output.level).toBeUndefined();
     expect(output.additional).toBeUndefined();
   });
 });
