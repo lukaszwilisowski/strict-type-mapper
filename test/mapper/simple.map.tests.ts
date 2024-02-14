@@ -4,7 +4,7 @@ import { StrictTypeMapper } from 'strict.type.mapper';
 
 describe('Simple mapper', () => {
   it('should map name and age', () => {
-    const simpleMapper = new StrictTypeMapper<
+    const typeMapper = new StrictTypeMapper<
       {
         name: string;
         age: number;
@@ -18,7 +18,7 @@ describe('Simple mapper', () => {
       age: 'age'
     });
 
-    const target = simpleMapper.map({
+    const target = typeMapper.map({
       name: 'Jack',
       age: 21
     });
@@ -28,7 +28,7 @@ describe('Simple mapper', () => {
   });
 
   it('should map undefined name and age', () => {
-    const simpleMapper = new StrictTypeMapper<
+    const typeMapper = new StrictTypeMapper<
       {
         name?: string;
         age: number;
@@ -42,7 +42,7 @@ describe('Simple mapper', () => {
       age: 'age'
     });
 
-    const target = simpleMapper.map({
+    const target = typeMapper.map({
       age: 21
     });
 
@@ -51,7 +51,7 @@ describe('Simple mapper', () => {
   });
 
   it('should map nullable name and age', () => {
-    const simpleMapper = new StrictTypeMapper<
+    const typeMapper = new StrictTypeMapper<
       {
         name: string | null;
         age: number;
@@ -65,7 +65,7 @@ describe('Simple mapper', () => {
       age: 'age'
     });
 
-    const target = simpleMapper.map({
+    const target = typeMapper.map({
       name: null,
       age: 21
     });
@@ -75,7 +75,7 @@ describe('Simple mapper', () => {
   });
 
   it('should map nullable undefined name and age', () => {
-    const simpleMapper = new StrictTypeMapper<
+    const typeMapper = new StrictTypeMapper<
       {
         name?: string | null;
         age: number;
@@ -89,7 +89,7 @@ describe('Simple mapper', () => {
       age: 'age'
     });
 
-    const target = simpleMapper.map({
+    const target = typeMapper.map({
       name: null,
       age: 21
     });
@@ -99,7 +99,7 @@ describe('Simple mapper', () => {
   });
 
   it('should map with mapper', () => {
-    const simpleMapper = new StrictTypeMapper<
+    const typeMapper = new StrictTypeMapper<
       {
         name?: string | null;
         age: number;
@@ -114,15 +114,19 @@ describe('Simple mapper', () => {
         (sourceName: string | null): string | null => sourceName?.toUpperCase() || 'AA',
         (targetName: string | null): string | null => targetName?.toLowerCase() || 'BB'
       ),
-      age: 'age'
+      age: MapTo.Property(
+        'age',
+        (sourceAge: number): number => sourceAge + 1,
+        (targetAge: number): number => targetAge - 1
+      )
     });
 
-    const target = simpleMapper.map({
+    const target = typeMapper.map({
       name: null,
       age: 21
     });
 
     expect(target.name).toEqual('AA');
-    expect(target.age).toBe(21);
+    expect(target.age).toBe(22);
   });
 });
