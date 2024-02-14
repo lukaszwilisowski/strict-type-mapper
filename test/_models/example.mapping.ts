@@ -65,3 +65,37 @@ export const complexMapping: Mapping<AnimalObject, MappedAnimalObject> = {
   features: MapTo.NestedObject('features', featuresMapping),
   featuresNullable: MapTo.NestedObject('features_nullable', featuresMapping)
 };
+
+export type PartialAnimal = Pick<AnimalObject, 'name' | 'name2' | 'name3' | 'nameNullable' | 'age'>;
+
+export const partialMapping: Mapping<PartialAnimal, MappedAnimalObject> = {
+  name: 'name2',
+  name2: 'name3',
+  name3: 'name',
+  nameNullable: MapTo.Property(
+    'nameNullable',
+    (outputName: string) => outputName.toUpperCase(),
+    (inputName: string) => inputName.toLowerCase()
+  ),
+  age: MapTo.Property(
+    'age',
+    (outputAge: number) => outputAge + 1,
+    (inputAge: number) => inputAge - 1
+  )
+};
+
+export const optionalMapping: Mapping<AnimalObject, MappedAnimalObject, false> = {
+  name: 'name2',
+  name2: 'name3',
+  name3: 'name',
+  nameNullable: MapTo.Property(
+    'nameNullable',
+    (outputName: string) => outputName.toUpperCase(),
+    (inputName: string) => inputName.toLowerCase()
+  ),
+  age: MapTo.Property(
+    'age',
+    (outputAge: number) => outputAge + 1,
+    (inputAge: number) => inputAge - 1
+  )
+};
