@@ -29,62 +29,53 @@ Note: When initializing StrictTypeMapper, **always provide** explicit `Source` a
 The third type parameter is optional and is used if you want to map only a subset of properties.
 
 ```typescript
-const typeMapper = new StrictTypeMapper<
-  {
-    name: string;
-    age: number;
-  },
-  {
-    name: string;
-    age: number;
-  }
->({
-  name: 'name',
-  age: 'age'
-});
+type Source = {
+  sourceName: string;
+  sourceAge: number;
+};
+
+type Target = {
+  targetName: string;
+  targetAge: number;
+};
+
+const mapping: Mapping<Source, Target> = {
+  sourceName: 'targetName',
+  sourceAge: 'targetAge'
+};
+
+const typeMapper = new StrictTypeMapper<Source, Target>(mapping);
 
 const target = typeMapper.map({
-  name: 'Jack',
-  age: 21
+  sourceName: 'Jack',
+  sourceAge: 21
 });
 
-expect(target.name).toEqual('Jack');
-expect(target.age).toBe(21);
+expect(target.targetName).toEqual('Jack');
+expect(target.targetAge).toBe(21);
 ```
 
-### 2.2 Reverse mapping
-
-Use it when you want to map from `Target` to `Source` type.
+When you make mistake in types, the library will scream:
 
 ```typescript
-const simpleMapper = new StrictTypeMapper<
-  {
-    name?: string | null;
-    age: number;
-  },
-  {
-    name?: string | null;
-    age: number;
-  }
->({
-  name: MapTo.Property(
-    'name',
-    (inputName: string | null): string | null => inputName?.toUpperCase() || 'AA',
-    (outputName: string | null): string | null => outputName?.toLowerCase() || 'BB'
-  ),
-  age: 'age'
-});
+type Source = {
+  sourceName?: string;
+  sourceAge: number;
+};
 
-const source = simpleMapper.mapReverse({
-  name: null,
-  age: 21
-});
+type Target = {
+  targetName: string; //ERROR! this needs to be optional to be mappable to sourceName
+  targetAge: number;
+};
 
-expect(source.name).toEqual('BB');
-expect(source.age).toBe(21);
+const mapping: Mapping<Source, Target> = {
+  // @ts-expect-error
+  sourceName: 'targetName',
+  sourceAge: 'targetAge'
+};
 ```
 
-### 2.3 Transformations
+### 2.2 Transformations
 
 You can also provide transformation functions to map properties and reverse transformations using [MapTo() utility functions](https://github.com/lukaszwilisowski/strict-type-mapper/blob/main/src/helpers/map.to.helper.ts).
 
@@ -93,35 +84,69 @@ Remember to **exclude** `undefined` checks (even if type is optional), because t
 `Null` is treated as a valid value, so you need to handle it explicitly.
 
 ```typescript
-const typeMapper = new StrictTypeMapper<
-  {
-    name?: string | null;
-    age: number;
-  },
-  {
-    name?: string | null;
-    age: number;
-  }
->({
-  name: MapTo.Property(
-    'name',
+type Source = {
+  sourceName?: string | null;
+  sourceAge: number;
+};
+
+type Target = {
+  sourceName?: string | null;
+  targetAge: number;
+};
+
+const mapping: Mapping<Source, Target> = {
+  sourceName: MapTo.Property(
+    'sourceName',
     (sourceName: string | null): string | null => sourceName?.toUpperCase() || 'AA',
     (targetName: string | null): string | null => targetName?.toLowerCase() || 'BB'
   ),
-  age: MapTo.Property(
-    'age',
+  sourceAge: MapTo.Property(
+    'targetAge',
     (sourceAge: number): number => sourceAge + 1,
     (targetAge: number): number => targetAge - 1
   )
-});
+};
+
+const typeMapper = new StrictTypeMapper<Source, Target>(mapping);
 
 const target = typeMapper.map({
-  name: null,
-  age: 21
+  sourceName: null,
+  sourceAge: 21
 });
 
-expect(target.name).toEqual('AA');
-expect(target.age).toBe(22);
+expect(target.sourceName).toEqual('AA');
+expect(target.targetAge).toBe(22);
+```
+
+### 2.3 Reverse mapping
+
+Use it when you want to map from `Target` to `Source` type.
+
+```typescript
+type Source = {
+  sourceName: string;
+  sourceAge: number;
+};
+
+type Target = {
+  targetName: string;
+  targetAge: number;
+};
+
+const mapping: Mapping<Source, Target> = {
+  sourceName: 'targetName',
+  sourceAge: 'targetAge'
+};
+
+const typeMapper = new StrictTypeMapper<Source, Target>(mapping);
+
+const source = typeMapper.mapReverse({
+  targetName: 'Jack',
+  targetAge: 21
+});
+
+expect(source.sourceName).toEqual('Jack');
+expect(source.sourceAge).toBe(21);
 ```
 
 ### 2.4 Complex and nested type mapping
@@ -234,7 +259,9 @@ export const complexMapping: Mapping<AnimalObject, MappedAnimalObject> = {
 
 ### 2.5 Partial mapping
 
-Use it when you want to map only a subset of properties.
+In principle you should map all properties, to make sure the types are correct. If you want to make some properties optional, add `?` to their type definition (for both `Source` and `Target` types).
+
+In rare cases when you want to map a **subtype** of `Source`, use Pick type or create a dedicated subset type, as shown here:
 
 ```typescript
 export type PartialAnimal = Pick<AnimalObject, 'name' | 'name2' | 'name3' | 'nameNullable' | 'age'>;
@@ -258,9 +285,7 @@ export const partialMapping: Mapping<PartialAnimal, MappedAnimalObject> = {
 
 ### 2.6 Optional mapping
 
-Use it when you want to map to Optional<T> types.
-
-Note than you need to set the 3rd type parameter to `false` in the `Mapping` type.
+In rare cases when you want to make all mappings **optional**, set the 3rd type parameter of `Mapping` and `StrictTypeMapper` to `false`.
 
 ```typescript
 export const optionalMapping: Mapping<AnimalObject, MappedAnimalObject, false> = {
@@ -280,11 +305,13 @@ export const optionalMapping: Mapping<AnimalObject, MappedAnimalObject, false> =
 };
 ```
 
-The `false` type parameter will change the output type to `Partial<Source>` for `map()` and `Partial<Target>` for `mapReverse()`.
+The `false` type parameter will change the output types to `Partial<Source>` and `Partial<Target>`.
 
-### 2.6 Mapping details:
+## 3. Mapping details:
 
-To get detailed mappings info use `getCompiledMapping` method.
+Sometimes you may want to get all mapping details, for example to check if all properties are mapped correctly.
+
+To get all mapping details use `getCompiledMapping` method.
 
 ```typescript
 const sourceKeys = partialMapper.getCompiledMapping().sourceKeys;
@@ -292,4 +319,20 @@ const sourceKeys = partialMapper.getCompiledMapping().sourceKeys;
 expect(sourceKeys).toContain('name');
 expect(sourceKeys).toContain('name2');
 expect(sourceKeys).toContain('name3');
+```
+
+All details:
+
+```typescript
+export class CompiledMapping {
+  public readonly sourceKeys: string[];
+  public readonly nestedSourceKeys: string[];
+  public readonly targetKeyToSourceKeyMap: Record<string, string>;
+  public readonly sourceKeyToTargetKeyMap: Record<string, string>;
+  public readonly targetKeyToFuncMap: Record<string, (i: unknown) => unknown>;
+  public readonly sourceKeyToFuncMap: Record<string, (i: unknown) => unknown>;
+  public readonly targetElementKeyToFuncMap: Record<string, (i: unknown) => unknown>;
+  public readonly sourceElementKeyToFuncMap: Record<string, (i: unknown) => unknown>;
+  public readonly targetKeyToNestedMapping: Record<string, CompiledMapping>;
+  public readonly sourceKeyToNestedMapping: Record<string, CompiledMapping>;
 ```

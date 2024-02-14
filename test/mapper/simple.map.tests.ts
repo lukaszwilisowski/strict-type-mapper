@@ -1,132 +1,167 @@
 import { describe, expect, it } from '@jest/globals';
 import { MapTo } from 'helpers/map.to.helper';
+import { Mapping } from 'interfaces/mapping.interface';
 import { StrictTypeMapper } from 'strict.type.mapper';
 
 describe('Simple mapper', () => {
-  it('should map name and age', () => {
-    const typeMapper = new StrictTypeMapper<
-      {
-        name: string;
-        age: number;
-      },
-      {
-        name: string;
-        age: number;
-      }
-    >({
-      name: 'name',
-      age: 'age'
-    });
+  it('should map sourceName and age', () => {
+    type Source = {
+      sourceName: string;
+      sourceAge: number;
+    };
+
+    type Target = {
+      targetName: string;
+      targetAge: number;
+    };
+
+    const mapping: Mapping<Source, Target> = {
+      sourceName: 'targetName',
+      sourceAge: 'targetAge'
+    };
+
+    const typeMapper = new StrictTypeMapper<Source, Target>(mapping);
 
     const target = typeMapper.map({
-      name: 'Jack',
-      age: 21
+      sourceName: 'Jack',
+      sourceAge: 21
     });
 
-    expect(target.name).toEqual('Jack');
-    expect(target.age).toBe(21);
+    expect(target.targetName).toEqual('Jack');
+    expect(target.targetAge).toBe(21);
   });
 
-  it('should map undefined name and age', () => {
-    const typeMapper = new StrictTypeMapper<
-      {
-        name?: string;
-        age: number;
-      },
-      {
-        name?: string;
-        age: number;
-      }
-    >({
-      name: 'name',
-      age: 'age'
-    });
+  it('should not map wrong properties', () => {
+    type Source = {
+      sourceName?: string;
+      sourceAge: number;
+    };
+
+    type Target = {
+      targetName: string; //ERROR! this needs to be optional to be mappable to sourceName
+      targetAge: number;
+    };
+
+    const mapping: Mapping<Source, Target> = {
+      // @ts-expect-error
+      sourceName: 'targetName',
+      sourceAge: 'targetAge'
+    };
+  });
+
+  it('should map optional sourceName and age', () => {
+    type Source = {
+      sourceName?: string;
+      sourceAge: number;
+    };
+
+    type Target = {
+      targetName?: string;
+      targetAge: number;
+    };
+
+    const mapping: Mapping<Source, Target> = {
+      sourceName: 'targetName',
+      sourceAge: 'targetAge'
+    };
+
+    const typeMapper = new StrictTypeMapper<Source, Target>(mapping);
 
     const target = typeMapper.map({
-      age: 21
+      sourceName: undefined,
+      sourceAge: 21
     });
 
-    expect(target.name).toBeUndefined();
-    expect(target.age).toBe(21);
+    expect(target.targetName).toBeUndefined();
+    expect(target.targetAge).toBe(21);
   });
 
-  it('should map nullable name and age', () => {
-    const typeMapper = new StrictTypeMapper<
-      {
-        name: string | null;
-        age: number;
-      },
-      {
-        name: string | null;
-        age: number;
-      }
-    >({
-      name: 'name',
-      age: 'age'
-    });
+  it('should map nullable sourceName and age', () => {
+    type Source = {
+      sourceName: string | null;
+      sourceAge: number;
+    };
+
+    type Target = {
+      targetName: string | null;
+      targetAge: number;
+    };
+
+    const mapping: Mapping<Source, Target> = {
+      sourceName: 'targetName',
+      sourceAge: 'targetAge'
+    };
+
+    const typeMapper = new StrictTypeMapper<Source, Target>(mapping);
 
     const target = typeMapper.map({
-      name: null,
-      age: 21
+      sourceName: null,
+      sourceAge: 21
     });
 
-    expect(target.name).toBeNull();
-    expect(target.age).toBe(21);
+    expect(target.targetName).toBeNull();
+    expect(target.targetAge).toBe(21);
   });
 
-  it('should map nullable undefined name and age', () => {
-    const typeMapper = new StrictTypeMapper<
-      {
-        name?: string | null;
-        age: number;
-      },
-      {
-        name?: string | null;
-        age: number;
-      }
-    >({
-      name: 'name',
-      age: 'age'
-    });
+  it('should map nullable undefined sourceName and age', () => {
+    type Source = {
+      sourceName?: string | null;
+      sourceAge: number;
+    };
+
+    type Target = {
+      targetName?: string | null;
+      targetAge: number;
+    };
+
+    const mapping: Mapping<Source, Target> = {
+      sourceName: 'targetName',
+      sourceAge: 'targetAge'
+    };
+
+    const typeMapper = new StrictTypeMapper<Source, Target>(mapping);
 
     const target = typeMapper.map({
-      name: null,
-      age: 21
+      sourceName: null,
+      sourceAge: 21
     });
 
-    expect(target.name).toBeNull();
-    expect(target.age).toBe(21);
+    expect(target.targetName).toBeNull();
+    expect(target.targetAge).toBe(21);
   });
 
-  it('should map with mapper', () => {
-    const typeMapper = new StrictTypeMapper<
-      {
-        name?: string | null;
-        age: number;
-      },
-      {
-        name?: string | null;
-        age: number;
-      }
-    >({
-      name: MapTo.Property(
-        'name',
+  it('should map with transformations', () => {
+    type Source = {
+      sourceName?: string | null;
+      sourceAge: number;
+    };
+
+    type Target = {
+      sourceName?: string | null;
+      targetAge: number;
+    };
+
+    const mapping: Mapping<Source, Target> = {
+      sourceName: MapTo.Property(
+        'sourceName',
         (sourceName: string | null): string | null => sourceName?.toUpperCase() || 'AA',
         (targetName: string | null): string | null => targetName?.toLowerCase() || 'BB'
       ),
-      age: MapTo.Property(
-        'age',
+      sourceAge: MapTo.Property(
+        'targetAge',
         (sourceAge: number): number => sourceAge + 1,
         (targetAge: number): number => targetAge - 1
       )
-    });
+    };
+
+    const typeMapper = new StrictTypeMapper<Source, Target>(mapping);
 
     const target = typeMapper.map({
-      name: null,
-      age: 21
+      sourceName: null,
+      sourceAge: 21
     });
 
-    expect(target.name).toEqual('AA');
-    expect(target.age).toBe(22);
+    expect(target.sourceName).toEqual('AA');
+    expect(target.targetAge).toBe(22);
   });
 });
