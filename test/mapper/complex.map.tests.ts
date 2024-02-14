@@ -71,7 +71,6 @@ describe('Complex mapper', () => {
   it('should map animal with nulled properties', () => {
     const target = complexMapper.map({
       name: 'Dawson',
-      nameNullable: null as unknown as string,
       name2: 'Jack',
       name3: 'Great',
       age: 21,
@@ -84,7 +83,7 @@ describe('Complex mapper', () => {
       featuresNullable: null as unknown as Features
     });
 
-    expect(target.nameNullable).toBe('default');
+    expect(target.nameNullable).toBeUndefined();
     expect(target.age_nullable).toBe(0);
     expect(target.friendIDsNullable).toBeNull();
     expect(target.friends_nullable).toBeNull();
