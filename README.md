@@ -19,9 +19,7 @@ If you want to see the TypeScript magic, please check those files:
 npm install strict-type-mapper
 ```
 
-## 2. Use cases and examples
-
-### 2.1 Simple type mapping
+## 2 Simple type mapping
 
 Note: When initializing StrictTypeMapper, **always provide** explicit `Source` and
 `Target` type parameters.
@@ -75,7 +73,7 @@ const mapping: Mapping<Source, Target> = {
 };
 ```
 
-### 2.2 Transformations
+## 3. Transformations
 
 You can also provide transformation functions to map properties and reverse transformations using [MapTo() utility functions](https://github.com/lukaszwilisowski/strict-type-mapper/blob/main/src/helpers/map.to.helper.ts).
 
@@ -118,7 +116,7 @@ expect(target.sourceName).toEqual('AA');
 expect(target.targetAge).toBe(22);
 ```
 
-### 2.3 Reverse mapping
+## 4. Reverse mapping
 
 Use it when you want to map from `Target` to `Source` type.
 
@@ -149,11 +147,9 @@ expect(source.sourceName).toEqual('Jack');
 expect(source.sourceAge).toBe(21);
 ```
 
-### 2.4 Complex and nested type mapping
+## 5. Complex and nested type mapping
 
-Use it when you want to map complex and nested types.
-
-Example type:
+Use it when you want to map complex and nested types. Example type:
 
 ```typescript
 export type FriendObject = {
@@ -257,7 +253,7 @@ export const complexMapping: Mapping<AnimalObject, MappedAnimalObject> = {
 };
 ```
 
-### 2.5 Partial mapping
+## 6. Partial mapping
 
 In principle you should map all properties, to make sure the types are correct. If you want to make some properties optional, add `?` to their type definition (for both `Source` and `Target` types).
 
@@ -283,7 +279,7 @@ export const partialMapping: Mapping<PartialAnimal, MappedAnimalObject> = {
 };
 ```
 
-### 2.6 Optional mapping
+## 7. Optional mapping
 
 In rare cases when you want to make all mappings **optional**, set the 3rd type parameter of `Mapping` and `StrictTypeMapper` to `false`.
 
@@ -307,7 +303,7 @@ export const optionalMapping: Mapping<AnimalObject, MappedAnimalObject, false> =
 
 The `false` type parameter will change the output types to `Partial<Source>` and `Partial<Target>`.
 
-## 3. Mapping details:
+## 8. Mapping details:
 
 Sometimes you may want to get all mapping details, for example to check if all properties are mapped correctly.
 
