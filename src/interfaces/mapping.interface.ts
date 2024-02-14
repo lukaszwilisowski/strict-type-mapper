@@ -1,4 +1,4 @@
-import { NonNullablePropsOf, PrimitiveTypes } from 'helpers/helper.types';
+import { NonNullablePropsOf, NonUndefined, PrimitiveTypes } from 'helpers/helper.types';
 import {
   TransformArray,
   TransformArrayOfObjects,
@@ -7,15 +7,14 @@ import {
 } from './mapping.transforms';
 
 /**
- * Strict type mapping of properties between `I` and `O` types. Designed for DB domain model mappings. Requires strict type constraints (optional properties must be mapped to optional properties, non-optional to non-optional).
- *
  * @type `MapAll` When set to `false`, allows to map a subset of properties.
  *
- * 1. The type constraints are more strict than standard Typescript so the mapped types must be equal.
- * 2. When types are not compatible, you must use `MapTo` function.
- * 3. When you want to use transformation, you must use `MapTo` function.
- * 4. When you want to map a nested object, you must use `MapTo.NestedObject`, with nested mapping.
- * 5. When you want to map an array of objects, you must use `MapTo.ObjectArray`, with nested mapping.
+ * Strict type mapping of properties between `I` and `O` types. Designed for DB domain model mappings. Uses stricter type constraints than standard Typescript.
+ *
+ * 1. If you use name-to-name mapping, both properties must have exactly the same type and both must be either optional or non-optional.
+ * 2. If you map properties with different types you need to use MapTo helper functions and provide custom transformations. There is only one constraint: both properties must be either optional or non-optional.
+ * 3. When you want to map a nested object, you must use `MapTo.NestedObject`, with nested mapping.
+ * 4. When you want to map an array of objects, you must use `MapTo.ObjectArray`, with nested mapping.
  */
 export type Mapping<I, O, MapAll = true> = MapAll extends true
   ? {
@@ -43,8 +42,7 @@ type PrimitiveCompatibleTypes<I, O, P extends keyof I, R extends keyof O> = I[P]
       ? PropertyCompatibleTypes<I, O, P, R, I[P], O[R]>
       : never
     : O[R] extends PrimitiveTypes | undefined
-    ? //each optional type can be set to NULL in SQL, we must consider that during custom transformation
-      PropertyCompatibleTypes<I, O, P, R, NonNullable<I[P]>, NonNullable<O[R]> | null>
+    ? PropertyCompatibleTypes<I, O, P, R, NonUndefined<I[P]>, NonUndefined<O[R]>>
     : never
   : //fallback
     never;

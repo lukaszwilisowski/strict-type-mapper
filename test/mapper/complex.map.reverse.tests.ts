@@ -1,13 +1,43 @@
 import { describe, expect, it } from '@jest/globals';
 import { StrictTypeMapper } from 'strict.type.mapper';
-import { AnimalObject, MappedAnimalObject } from '../_models/animal.models';
-import { complexMapping } from '../_models/example.mapping';
+import { AnimalObject, FeaturesObject, MappedAnimalObject } from '../_models/animal.models';
+import { complexMapping, featuresMapping } from '../_models/example.mapping';
 
 describe('Complex mapper', () => {
-  const complexMapper = new StrictTypeMapper<AnimalObject, MappedAnimalObject, false>(complexMapping);
+  const simpleMapper = new StrictTypeMapper<FeaturesObject, FeaturesObject>(featuresMapping);
 
-  it('should map input', () => {
-    const input = complexMapper.mapReverse({
+  const complexMapper = new StrictTypeMapper<AnimalObject, MappedAnimalObject>(complexMapping);
+
+  it('should map reverse features', () => {
+    const source = simpleMapper.mapReverse({
+      color: 'blond_changed',
+      level: 103,
+      additional: {
+        serialNumber: 's-03_new',
+        index: 5
+      }
+    });
+
+    expect(source.color).toEqual('blond');
+    expect(source.level).toEqual(100);
+    expect(source.additional?.serialNumber).toEqual('s-03');
+    expect(source.additional?.index).toEqual(5);
+  });
+
+  it('should map reverse features with nulled properties', () => {
+    const source = simpleMapper.mapReverse({
+      color: 'blond_changed',
+      level: undefined,
+      additional: undefined
+    });
+
+    expect(source.color).toEqual('blond');
+    expect(source.level).toBeUndefined();
+    expect(source.additional).toBeUndefined();
+  });
+
+  it('should map reverse animal', () => {
+    const source = complexMapper.mapReverse({
       name: 'Dawson',
       name2: 'Jack',
       name3: 'Great',
@@ -32,22 +62,20 @@ describe('Complex mapper', () => {
       }
     });
 
-    expect(Object.keys(input).length).toBe(8);
-    expect(input.name).toEqual('Jack');
-    expect(input.name2).toEqual('Great');
-    expect(input.age).toBe(20);
-    expect(input.friendIDs).toBeUndefined();
-    expect(input.friendIDsNullable).toEqual([1, 2, 3]);
-    expect(input.friends[0]).toEqual({ age: 9 });
-    expect(input.friendsNullable![0]).toEqual({ age: 9 });
-    expect(input.features.color).toEqual('blond');
-    expect(input.features.level).toEqual(97);
-    expect(input.features.additional?.serialNumber).toEqual('s-03');
-    expect(input.featuresNullable!.additional?.serialNumber).toEqual('s-03');
+    expect(source.name).toEqual('Jack');
+    expect(source.name2).toEqual('Great');
+    expect(source.age).toBe(20);
+    expect(source.friendIDsNullable).toEqual([1, 2, 3]);
+    expect(source.friends[0]).toEqual({ name: 'Rose', age: 9 });
+    expect(source.friendsNullable![0]).toEqual({ name: 'Rose', age: 9 });
+    expect(source.features.color).toEqual('blond');
+    expect(source.features.level).toEqual(97);
+    expect(source.features.additional?.serialNumber).toEqual('s-03');
+    expect(source.featuresNullable!.additional?.serialNumber).toEqual('s-03');
   });
 
-  it('should map and reverse', () => {
-    const output: AnimalObject = {
+  it('should map animal and reverse', () => {
+    const source: AnimalObject = {
       name: 'Jack',
       name2: 'Dawson',
       name3: 'Great',
@@ -64,19 +92,17 @@ describe('Complex mapper', () => {
       }
     };
 
-    const input = complexMapper.map(output);
-    const reversedObject = complexMapper.mapReverse(input);
+    const target = complexMapper.map(source);
+    const remappedSource = complexMapper.mapReverse(target);
 
-    expect(reversedObject.name3).toBeUndefined(); //not mapped
-    expect(reversedObject.friendIDs).toBeUndefined(); //not mapped
-    expect(reversedObject.friends[0]).toEqual({ age: 10 });
+    expect(remappedSource.friends[0]).toEqual({ name: 'Rose', age: 10 });
 
-    expect(output.name).toEqual(reversedObject.name);
-    expect(output.name2).toEqual(reversedObject.name2);
-    expect(output.age).toEqual(reversedObject.age);
-    expect(output.friendIDsNullable).toEqual(reversedObject.friendIDsNullable);
-    expect(output.features.color).toEqual(reversedObject.features.color);
-    expect(output.features.level).toEqual(reversedObject.features.level);
-    expect(output.features.additional?.serialNumber).toEqual(reversedObject.features.additional?.serialNumber);
+    expect(source.name).toEqual(remappedSource.name);
+    expect(source.name2).toEqual(remappedSource.name2);
+    expect(source.age).toEqual(remappedSource.age);
+    expect(source.friendIDsNullable).toEqual(remappedSource.friendIDsNullable);
+    expect(source.features.color).toEqual(remappedSource.features.color);
+    expect(source.features.level).toEqual(remappedSource.features.level);
+    expect(source.features.additional?.serialNumber).toEqual(remappedSource.features.additional?.serialNumber);
   });
 });

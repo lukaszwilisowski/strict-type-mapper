@@ -8,7 +8,13 @@ import { CompiledMapping } from './models/compiled.mapping';
  * @type `I` input type.
  * @type `O` output type.
  */
-export class StrictTypeMapper<I, O, MapAll = true> {
+export class StrictTypeMapper<
+  I,
+  O,
+  MapAll = true,
+  Source = MapAll extends true ? I : Partial<I>,
+  Target = MapAll extends true ? O : Partial<O>
+> {
   private readonly compiledMapping: CompiledMapping;
 
   public constructor(mapping: Mapping<I, O, MapAll>) {
@@ -21,23 +27,23 @@ export class StrictTypeMapper<I, O, MapAll = true> {
   }
 
   /** Maps input . */
-  public map(input: I): O {
+  public map(input: Source): Target {
     return this.mapInternal(input, this.compiledMapping);
   }
 
   /** Maps object criteria into entity criteria. */
-  public mapReverse(input: O): I {
+  public mapReverse(input: Target): Source {
     return this.mapInternal(input, this.compiledMapping, true);
   }
 
-  private mapInternal<I, O>(input: I, mapping: CompiledMapping, reversed?: boolean): O {
+  private mapInternal<A, B>(input: A, mapping: CompiledMapping, reversed?: boolean): B {
     const mappedOutput: { [k: string]: unknown } = {};
 
-    const keyMap = reversed ? mapping.inputKeyToOutputKeyMap : mapping.outputKeyToInputKeyMap;
+    const keyMap = reversed ? mapping.sourceKeyToTargetKeyMap : mapping.targetKeyToSourceKeyMap;
 
     for (const key in keyMap) {
       const targetKey = keyMap[key];
-      const value = input[key as keyof I];
+      const value = input[key as keyof A];
 
       //undefined properties cannot be mapped
       if (value === undefined) continue;
@@ -47,14 +53,14 @@ export class StrictTypeMapper<I, O, MapAll = true> {
       mappedOutput[targetKey] = transformedValue;
     }
 
-    return mappedOutput as O;
+    return mappedOutput as B;
   }
 
   private getTransformedValue(key: string, value: unknown, mapping: CompiledMapping, reversed?: boolean): unknown {
     //compute transformed value
     let transformedValue: unknown = value;
 
-    const nestedMapping = reversed ? mapping.inputKeyToNestedMapping[key] : mapping.outputKeyToNestedMapping[key];
+    const nestedMapping = reversed ? mapping.sourceKeyToNestedMapping[key] : mapping.targetKeyToNestedMapping[key];
 
     if (nestedMapping) {
       if (transformedValue === null) {
@@ -73,8 +79,8 @@ export class StrictTypeMapper<I, O, MapAll = true> {
 
     //array transformation
     const arrayElementTansform = reversed
-      ? mapping.inputElementKeyToFuncMap[key]
-      : mapping.outputElementKeyToFuncMap[key];
+      ? mapping.sourceElementKeyToFuncMap[key]
+      : mapping.targetElementKeyToFuncMap[key];
 
     if (arrayElementTansform) {
       if (transformedValue === null) {
@@ -91,7 +97,7 @@ export class StrictTypeMapper<I, O, MapAll = true> {
 
     //primitive transformation
     const transform =
-      (reversed ? mapping.inputKeyToFuncMap[key] : mapping.outputKeyToFuncMap[key]) || //transform found?
+      (reversed ? mapping.sourceKeyToFuncMap[key] : mapping.targetKeyToFuncMap[key]) || //transform found?
       ((i: unknown) => i); //if not, fallback to no-transformation
 
     transformedValue = Array.isArray(transformedValue)

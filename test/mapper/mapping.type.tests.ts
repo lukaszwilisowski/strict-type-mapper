@@ -57,8 +57,8 @@ describe('Mapping', () => {
     const mapping: Mapping<AnimalObject, MappedAnimalObject, false> = {
       ageNullable: MapTo.Property(
         'age_nullable',
-        (objectPoints: number) => objectPoints,
-        (entityPoints: number | null) => entityPoints || 0
+        (objectAge: number | null): number | null => objectAge,
+        (entityAge: number | null): number | null => entityAge || 0
       )
     };
   });
@@ -67,8 +67,8 @@ describe('Mapping', () => {
     const mapping: Mapping<AnimalObject, MappedAnimalObject, false> = {
       ageNullable: MapTo.Property(
         'nameNullable',
-        (objectPoints: number) => objectPoints?.toString() || '5',
-        (entityName: string | null) => parseInt(entityName || '1')
+        (objectAge: number | null): string => objectAge?.toString() || '5',
+        (entityAge: string): number | null => parseInt(entityAge || '1')
       )
     };
   });

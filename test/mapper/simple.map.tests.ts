@@ -1,35 +1,128 @@
 import { describe, expect, it } from '@jest/globals';
+import { MapTo } from 'helpers/map.to.helper';
 import { StrictTypeMapper } from 'strict.type.mapper';
-import { FeaturesObject } from '../_models/animal.models';
-import { featuresMapping } from '../_models/example.mapping';
 
 describe('Simple mapper', () => {
-  const simpleMapper = new StrictTypeMapper<FeaturesObject, FeaturesObject>(featuresMapping);
-
-  it('should map input', () => {
-    const output = simpleMapper.map({
-      color: 'blond',
-      level: 100,
-      additional: {
-        serialNumber: 's-03',
-        index: 5
+  it('should map name and age', () => {
+    const simpleMapper = new StrictTypeMapper<
+      {
+        name: string;
+        age: number;
+      },
+      {
+        name: string;
+        age: number;
       }
+    >({
+      name: 'name',
+      age: 'age'
     });
 
-    expect(output.color).toEqual('blond_changed');
-    expect(output.level).toEqual(103);
-    expect(output.additional?.serialNumber).toEqual('s-03_new');
-    expect(output.additional?.index).toEqual(5);
+    const target = simpleMapper.map({
+      name: 'Jack',
+      age: 21
+    });
+
+    expect(target.name).toEqual('Jack');
+    expect(target.age).toBe(21);
   });
 
-  it('should map input with nulled properties', () => {
-    const output = simpleMapper.map({
-      color: 'blond',
-      additional: undefined
+  it('should map undefined name and age', () => {
+    const simpleMapper = new StrictTypeMapper<
+      {
+        name?: string;
+        age: number;
+      },
+      {
+        name?: string;
+        age: number;
+      }
+    >({
+      name: 'name',
+      age: 'age'
     });
 
-    expect(output.color).toEqual('blond_changed');
-    expect(output.level).toBeUndefined();
-    expect(output.additional).toBeUndefined();
+    const target = simpleMapper.map({
+      age: 21
+    });
+
+    expect(target.name).toBeUndefined();
+    expect(target.age).toBe(21);
+  });
+
+  it('should map nullable name and age', () => {
+    const simpleMapper = new StrictTypeMapper<
+      {
+        name: string | null;
+        age: number;
+      },
+      {
+        name: string | null;
+        age: number;
+      }
+    >({
+      name: 'name',
+      age: 'age'
+    });
+
+    const target = simpleMapper.map({
+      name: null,
+      age: 21
+    });
+
+    expect(target.name).toBeNull();
+    expect(target.age).toBe(21);
+  });
+
+  it('should map nullable undefined name and age', () => {
+    const simpleMapper = new StrictTypeMapper<
+      {
+        name?: string | null;
+        age: number;
+      },
+      {
+        name?: string | null;
+        age: number;
+      }
+    >({
+      name: 'name',
+      age: 'age'
+    });
+
+    const target = simpleMapper.map({
+      name: null,
+      age: 21
+    });
+
+    expect(target.name).toBeNull();
+    expect(target.age).toBe(21);
+  });
+
+  it('should map with mapper', () => {
+    const simpleMapper = new StrictTypeMapper<
+      {
+        name?: string | null;
+        age: number;
+      },
+      {
+        name?: string | null;
+        age: number;
+      }
+    >({
+      name: MapTo.Property(
+        'name',
+        (sourceName: string | null): string | null => sourceName?.toUpperCase() || 'AA',
+        (targetName: string | null): string | null => targetName?.toLowerCase() || 'BB'
+      ),
+      age: 'age'
+    });
+
+    const target = simpleMapper.map({
+      name: null,
+      age: 21
+    });
+
+    expect(target.name).toEqual('AA');
+    expect(target.age).toBe(21);
   });
 });

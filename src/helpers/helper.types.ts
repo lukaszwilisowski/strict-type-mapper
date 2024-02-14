@@ -11,6 +11,8 @@ export type NonNullablePropsOf<T> = {
   [P in keyof T]-?: T[P];
 };
 
+export type NonUndefined<T> = T extends undefined ? never : T;
+
 export type NoInfer<T> = [T][T extends unknown ? 0 : never];
 
 /** Alias type containing all supported primitive types. */

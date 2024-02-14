@@ -1,13 +1,42 @@
 import { describe, expect, it } from '@jest/globals';
 import { StrictTypeMapper } from 'strict.type.mapper';
-import { AnimalObject, MappedAnimalObject } from '../_models/animal.models';
-import { complexMapping } from '../_models/example.mapping';
+import { AnimalObject, FeaturesObject, MappedAnimalObject } from '../_models/animal.models';
+import { complexMapping, featuresMapping } from '../_models/example.mapping';
 import { Features, Friend } from '../_models/non-nullable.model';
 
 describe('Complex mapper', () => {
-  const complexMapper = new StrictTypeMapper<AnimalObject, MappedAnimalObject, false>(complexMapping);
+  const simpleMapper = new StrictTypeMapper<FeaturesObject, FeaturesObject>(featuresMapping);
 
-  it('should map', () => {
+  const complexMapper = new StrictTypeMapper<AnimalObject, MappedAnimalObject>(complexMapping);
+
+  it('should map features', () => {
+    const target = simpleMapper.map({
+      color: 'blond',
+      level: 100,
+      additional: {
+        serialNumber: 's-03',
+        index: 5
+      }
+    });
+
+    expect(target.color).toEqual('blond_changed');
+    expect(target.level).toEqual(103);
+    expect(target.additional?.serialNumber).toEqual('s-03_new');
+    expect(target.additional?.index).toEqual(5);
+  });
+
+  it('should map input with nulled properties', () => {
+    const target = simpleMapper.map({
+      color: 'blond',
+      additional: undefined
+    });
+
+    expect(target.color).toEqual('blond_changed');
+    expect(target.level).toBeUndefined();
+    expect(target.additional).toBeUndefined();
+  });
+
+  it('should map animal', () => {
     const input: AnimalObject = {
       name: 'Jack',
       name2: 'Dawson',
@@ -25,21 +54,22 @@ describe('Complex mapper', () => {
       }
     };
 
-    const output = complexMapper.map(input);
+    const target = complexMapper.map(input);
 
-    expect(output.name2).toEqual('Jack');
-    expect(output.name3).toEqual('Dawson');
-    expect(output.age).toBe(21);
-    expect(output.friendIDs).toBeUndefined();
-    expect(output.friendIDsNullable).toEqual([1, 2, 3]);
-    expect(output.friends[0].age).toEqual(10);
-    expect(output.features.color).toEqual('blond');
-    expect(output.features.level).toEqual(100);
-    expect(output.features.additional?.serialNumber).toEqual('s-03');
+    expect(target.name2).toEqual('Jack');
+    expect(target.name3).toEqual('Dawson');
+    expect(target.name).toEqual('Great');
+    expect(target.age).toBe(21);
+    expect(target.friendIDs).toStrictEqual([1, 2, 3]);
+    expect(target.friendIDsNullable).toStrictEqual([-1, -2, -3]);
+    expect(target.friends[0].age).toEqual(11);
+    expect(target.features.color).toEqual('blond_changed');
+    expect(target.features.level).toEqual(103);
+    expect(target.features.additional?.serialNumber).toEqual('s-03_new');
   });
 
-  it('should map input with nulled properties', () => {
-    const output = complexMapper.map({
+  it('should map animal with nulled properties', () => {
+    const target = complexMapper.map({
       name: 'Dawson',
       nameNullable: null as unknown as string,
       name2: 'Jack',
@@ -54,28 +84,26 @@ describe('Complex mapper', () => {
       featuresNullable: null as unknown as Features
     });
 
-    expect(output.nameNullable).toBe('default');
-    expect(output.age_nullable).toBe(0);
-    expect(output.friendIDsNullable).toBeNull();
-    expect(output.friends_nullable).toBeNull();
-    expect(output.features).toBeNull();
-    expect(output.features_nullable).toBeNull();
+    expect(target.nameNullable).toBe('default');
+    expect(target.age_nullable).toBe(0);
+    expect(target.friendIDsNullable).toBeNull();
+    expect(target.friends_nullable).toBeNull();
+    expect(target.features).toBeNull();
+    expect(target.features_nullable).toBeNull();
   });
 
   it('should return input keys', () => {
-    const inputKeys = complexMapper.getCompiledMapping().inputKeys;
+    const sourceKeys = complexMapper.getCompiledMapping().sourceKeys;
 
-    expect(inputKeys).not.toContain('name');
-    expect(inputKeys).toContain('nameNullable');
-    expect(inputKeys).toContain('name2');
-    expect(inputKeys).toContain('name3');
-    expect(inputKeys).toContain('age');
-    expect(inputKeys).toContain('age_nullable');
-    expect(inputKeys).not.toContain('friendIDs');
-    expect(inputKeys).toContain('friendIDsNullable');
-    expect(inputKeys).toContain('friends');
-    expect(inputKeys).toContain('friends_nullable');
-    expect(inputKeys).toContain('features');
-    expect(inputKeys).toContain('features_nullable');
+    expect(sourceKeys).toContain('nameNullable');
+    expect(sourceKeys).toContain('name2');
+    expect(sourceKeys).toContain('name3');
+    expect(sourceKeys).toContain('age');
+    expect(sourceKeys).toContain('age_nullable');
+    expect(sourceKeys).toContain('friendIDsNullable');
+    expect(sourceKeys).toContain('friends');
+    expect(sourceKeys).toContain('friends_nullable');
+    expect(sourceKeys).toContain('features');
+    expect(sourceKeys).toContain('features_nullable');
   });
 });
