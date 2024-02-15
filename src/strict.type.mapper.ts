@@ -3,10 +3,46 @@ import { Mapping } from './interfaces/mapping.interface';
 import { CompiledMapping } from './models/compiled.mapping';
 
 /**
- * A strict type mapper. Takes input of type `I` and maps it to output of type `O` or vice versa.
+ * Takes input of type `I` and maps it to output of type `O` or vice versa.
  *
  * @type `I` input type.
  * @type `O` output type.
+ *
+ * @param mapping - object of type `Mapping<I, O>`.
+ *
+ * @example
+ * ```typescript
+ *type A = { b?: string; c?: boolean };
+  type B = { b?: string; c?: string };
+
+  const mapping: Mapping<A, B> = {
+    b: MapTo.Property(
+      'b',
+      (sourceB: string) => sourceB.toUpperCase(),
+      (targetB: string) => targetB.toLowerCase()
+    ),
+    c: MapTo.Property(
+      'c',
+      (sourceC: boolean) => (sourceC ? 'true' : 'false'),
+      (targetC: string) => targetC === 'true'
+    )
+  };
+
+  const typeMapper = new StrictTypeMapper<A, B>(mapping);
+
+  const target = typeMapper.map({
+    c: true
+  });
+
+  expect(target.b).toBeUndefined();
+  expect(target.c).toBe('true');
+
+  const source = typeMapper.mapReverse(target);
+
+  expect(source.b).toBeUndefined();
+  expect(source.c).toBe(true);
+
+ * ```
  */
 export class StrictTypeMapper<
   I,

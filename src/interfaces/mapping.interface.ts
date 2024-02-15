@@ -73,14 +73,14 @@ type PrimitiveCompatibleTypes<I, O, P extends keyof I, R extends keyof O> = O[R]
 type PrimitiveArrayCompatibleTypes<I, O, P extends keyof I, R extends keyof O> = O[R] extends
   | PrimitiveTypes[]
   | undefined
-  ? O[R] extends PrimitiveTypes[]
-    ? I[P] extends Array<infer X>
-      ? O[R] extends Array<infer Y>
-        ? ArrayCompatibleTypes<I, O, P, R, X, Y>
-        : never
+  ? I[P] extends Array<infer X>
+    ? O[R] extends Array<infer Y>
+      ? ArrayCompatibleTypes<I, O, P, R, X, Y>
       : never
     : I[P] extends Array<infer X> | undefined
-    ? O[R] extends Array<infer Y> | undefined
+    ? O[R] extends Array<infer Y>
+      ? never
+      : O[R] extends Array<infer Y> | undefined
       ? ArrayCompatibleTypes<I, O, P, R, X, Y>
       : never
     : never

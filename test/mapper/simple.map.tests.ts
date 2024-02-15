@@ -22,10 +22,12 @@ describe('Simple mapper', () => {
 
     const typeMapper = new StrictTypeMapper<Source, Target>(mapping);
 
-    const target = typeMapper.map({
+    const source: Source = {
       sourceName: 'Jack',
       sourceAge: 21
-    });
+    };
+
+    const target = typeMapper.map(source);
 
     expect(target.targetName).toEqual('Jack');
     expect(target.targetAge).toBe(21);

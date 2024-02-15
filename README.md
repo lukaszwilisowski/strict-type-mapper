@@ -1,12 +1,12 @@
 # Strict Type Mapper
 
-This is an extension of popular Mapper / AutoMapper libraries that map one type to another. By using few TypeScript hacks, this library is able to check both types more carefully than other libraries and standard TypeScript constraints. This results in lower risk of runtime errors.
+StrictTypeMapper is a Mapper / AutoMapper library that uses advanced **Compile-time type checking** to enforce strict type compatibility. The checks are more strict than standard TypeScript constraints which helps catching runtime errors.
 
-This library has been originally designed to **map domain types to DB types** as a part of `domain-repository` npm package, but since then, it has been made a separate library.
+This library has been originally designed to **map domain types to DB types** as a part of [domain-repository](https://www.npmjs.com/package/domain-repository) npm package, but recently it has been published as a separate library.
 
 NOTE: if you have an error in mapping, it probably means that you are trying to map Optional type to non-Optional type or vice versa. Unfortunately, TypesScript does not provide meaningful error messages in such cases so you have to believe that library is right and your code is wrong :-)
 
-If you want to see the TypeScript magic, please check those files:
+If you want to see some TypeScript hacks, please check the following files:
 
 - [Strict Mapping ✨ interface](https://github.com/lukaszwilisowski/strict-type-mapper/blob/main/src/interfaces/mapping.interface.ts)
 - [Magic ✨ types](https://github.com/lukaszwilisowski/strict-type-mapper/blob/main/src/helpers/helper.types.ts)
@@ -19,61 +19,77 @@ If you want to see the TypeScript magic, please check those files:
 npm install strict-type-mapper
 ```
 
-## 2 Simple type mapping with transofmrations
+## 2 Getting started
 
-Note: When initializing StrictTypeMapper, **always provide** explicit `Source` and
-`Target` type parameters.
+### 2.1 Strict type mapping
 
-The third type parameter is optional and is used if you want to map only a subset of properties.
+Define a strict mapping by creating an object of type `Mapping<Source, Target>`.
 
 ```typescript
 type Source = {
-  sourceName: string;
-  sourceAge: number;
+  name: string;
+  age: number;
 };
 
 type Target = {
-  targetName: string;
-  targetAge: number;
+  name: string;
+  age: number;
 };
 
 const mapping: Mapping<Source, Target> = {
-  sourceName: 'targetName',
-  sourceAge: 'targetAge'
+  name: 'name',
+  age: 'age'
+};
+```
+
+When you make mistake in types, the compiler will scream:
+
+```typescript
+type Source = {
+  name?: string;
+  age: number;
 };
 
-const typeMapper = new StrictTypeMapper<Source, Target>(mapping);
+type Target = {
+  name: string; //ERROR! this needs to be optional to be mappable to sourceName
+  age: number;
+};
 
-const target = typeMapper.map({
+const mapping: Mapping<Source, Target> = {
+  // @ts-expect-error
+  name: 'targetName',
+  age: 'targetAge'
+};
+```
+
+### 2.2 Initialize StrictTypeMapper
+
+Initialize StrictTypeMapper class, by providing **explicit** `Source` and
+`Target` type parameters.
+
+```typescript
+const typeMapper = new StrictTypeMapper<Source, Target>(mapping);
+```
+
+### 2.3 Mapping objects
+
+Use `map()` function to map `Source` to `Target` type.
+
+```typescript
+const source: Source = {
   sourceName: 'Jack',
   sourceAge: 21
-});
+};
+
+const target = typeMapper.map(source);
 
 expect(target.targetName).toEqual('Jack');
 expect(target.targetAge).toBe(21);
 ```
 
-When you make mistake in types, the library will scream:
+Use `mapReverse()` function to map `Target` to `Source` type.
 
-```typescript
-type Source = {
-  sourceName?: string;
-  sourceAge: number;
-};
-
-type Target = {
-  targetName: string; //ERROR! this needs to be optional to be mappable to sourceName
-  targetAge: number;
-};
-
-const mapping: Mapping<Source, Target> = {
-  // @ts-expect-error
-  sourceName: 'targetName',
-  sourceAge: 'targetAge'
-};
-```
-
-## 3. `mapReverse()` and transformations
+## 3. Custom transformations
 
 You can also provide transformation functions to map properties and reverse transformations using [MapTo() utility functions](https://github.com/lukaszwilisowski/strict-type-mapper/blob/main/src/helpers/map.to.helper.ts).
 
