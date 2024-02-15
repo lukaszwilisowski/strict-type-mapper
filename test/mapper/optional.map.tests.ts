@@ -63,17 +63,17 @@ describe('Optional mapper', () => {
   });
 
   it('should return partial input keys', () => {
-    const sourceKeys = optionalMapper.getCompiledMapping().targetKeys;
+    const targetKeys = optionalMapper.getCompiledMapping().targetKeys;
 
-    expect(sourceKeys).toContain('name');
-    expect(sourceKeys).toContain('name2');
-    expect(sourceKeys).toContain('name3');
-    expect(sourceKeys).toContain('age');
-    expect(sourceKeys).toContain('nameNullable');
-    expect(sourceKeys).not.toContain('friendIDsNullable');
-    expect(sourceKeys).not.toContain('friends');
-    expect(sourceKeys).not.toContain('friends_nullable');
-    expect(sourceKeys).not.toContain('features');
-    expect(sourceKeys).not.toContain('features_nullable');
+    expect(targetKeys).toContain('name');
+    expect(targetKeys).toContain('name2');
+    expect(targetKeys).toContain('name3');
+    expect(targetKeys).toContain('age');
+    expect(targetKeys).toContain('nameNullable');
+    expect(targetKeys).not.toContain('friendIDsNullable');
+    expect(targetKeys).not.toContain('friends');
+    expect(targetKeys).not.toContain('friends_nullable');
+    expect(targetKeys).not.toContain('features');
+    expect(targetKeys).not.toContain('features_nullable');
   });
 });

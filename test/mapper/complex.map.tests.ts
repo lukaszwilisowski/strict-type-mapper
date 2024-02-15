@@ -92,17 +92,17 @@ describe('Complex mapper', () => {
   });
 
   it('should return input keys', () => {
-    const sourceKeys = complexMapper.getCompiledMapping().targetKeys;
+    const targetKeys = complexMapper.getCompiledMapping().targetKeys;
 
-    expect(sourceKeys).toContain('nameNullable');
-    expect(sourceKeys).toContain('name2');
-    expect(sourceKeys).toContain('name3');
-    expect(sourceKeys).toContain('age');
-    expect(sourceKeys).toContain('age_nullable');
-    expect(sourceKeys).toContain('friendIDsNullable');
-    expect(sourceKeys).toContain('friends');
-    expect(sourceKeys).toContain('friends_nullable');
-    expect(sourceKeys).toContain('features');
-    expect(sourceKeys).toContain('features_nullable');
+    expect(targetKeys).toContain('nameNullable');
+    expect(targetKeys).toContain('name2');
+    expect(targetKeys).toContain('name3');
+    expect(targetKeys).toContain('age');
+    expect(targetKeys).toContain('age_nullable');
+    expect(targetKeys).toContain('friendIDsNullable');
+    expect(targetKeys).toContain('friends');
+    expect(targetKeys).toContain('friends_nullable');
+    expect(targetKeys).toContain('features');
+    expect(targetKeys).toContain('features_nullable');
   });
 });

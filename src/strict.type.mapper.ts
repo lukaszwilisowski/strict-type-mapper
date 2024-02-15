@@ -75,7 +75,7 @@ export class StrictTypeMapper<
   private mapInternal<A, B>(input: A, mapping: CompiledMapping, reversed?: boolean): B {
     const mappedOutput: { [k: string]: unknown } = {};
 
-    const keyMap = reversed ? mapping.targetKeyToTargetKeyMap : mapping.sourceKeyToSourceKeyMap;
+    const keyMap = reversed ? mapping.targetKeyToSourceKeyMap : mapping.sourceKeyToTargetKeyMap;
 
     for (const key in keyMap) {
       const targetKey = keyMap[key];
