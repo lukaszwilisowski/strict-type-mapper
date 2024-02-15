@@ -92,7 +92,7 @@ describe('Complex mapper', () => {
   });
 
   it('should return input keys', () => {
-    const sourceKeys = complexMapper.getCompiledMapping().sourceKeys;
+    const sourceKeys = complexMapper.getCompiledMapping().targetKeys;
 
     expect(sourceKeys).toContain('nameNullable');
     expect(sourceKeys).toContain('name2');

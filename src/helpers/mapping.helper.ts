@@ -16,26 +16,26 @@ export const compileMappings = <A, E, MapAll>(mapping: Mapping<A, E, MapAll>): C
     if (keyMapping instanceof TransformProperty) {
       //transform property
       const transformProperty = keyMapping as TransformProperty<string, unknown, unknown>;
-      cm.targetKeyToSourceKeyMap[key] = transformProperty.targetKey;
-      cm.targetKeyToFuncMap[key] = transformProperty.transformer;
+      cm.sourceKeyToSourceKeyMap[key] = transformProperty.targetKey;
+      cm.sourceKeyToFuncMap[key] = transformProperty.transformer;
       //reversed keys
-      cm.sourceKeyToTargetKeyMap[transformProperty.targetKey] = key;
-      cm.sourceKeyToFuncMap[transformProperty.targetKey] = transformProperty.reverseTransformer;
+      cm.targetKeyToTargetKeyMap[transformProperty.targetKey] = key;
+      cm.targetKeyToFuncMap[transformProperty.targetKey] = transformProperty.reverseTransformer;
       //entity key
-      cm.sourceKeys.push(transformProperty.targetKey);
+      cm.targetKeys.push(transformProperty.targetKey);
       continue;
     }
 
     if (keyMapping instanceof TransformArray) {
       //transform array
       const transformArray = keyMapping as TransformArray<string, unknown, unknown>;
-      cm.targetKeyToSourceKeyMap[key] = transformArray.targetKey;
-      cm.targetElementKeyToFuncMap[key] = transformArray.elementTransformer;
+      cm.sourceKeyToSourceKeyMap[key] = transformArray.targetKey;
+      cm.sourceElementKeyToFuncMap[key] = transformArray.elementTransformer;
       //reversed keys
-      cm.sourceKeyToTargetKeyMap[transformArray.targetKey] = key;
-      cm.sourceElementKeyToFuncMap[transformArray.targetKey] = transformArray.reverseElementTransformer;
+      cm.targetKeyToTargetKeyMap[transformArray.targetKey] = key;
+      cm.targetElementKeyToFuncMap[transformArray.targetKey] = transformArray.reverseElementTransformer;
       //entity key
-      cm.sourceKeys.push(transformArray.targetKey);
+      cm.targetKeys.push(transformArray.targetKey);
       continue;
     }
 
@@ -43,19 +43,19 @@ export const compileMappings = <A, E, MapAll>(mapping: Mapping<A, E, MapAll>): C
       //transform array of objects
       const transformObjectArray = keyMapping as TransformArrayOfObjects<string, unknown>;
       //map nested object key to entity's counterpart
-      cm.targetKeyToSourceKeyMap[key] = transformObjectArray.targetKey;
-      cm.sourceKeyToTargetKeyMap[transformObjectArray.targetKey] = key;
+      cm.sourceKeyToSourceKeyMap[key] = transformObjectArray.targetKey;
+      cm.targetKeyToTargetKeyMap[transformObjectArray.targetKey] = key;
       //entity key
-      cm.sourceKeys.push(transformObjectArray.targetKey);
-      cm.nestedSourceKeys.push(transformObjectArray.targetKey);
+      cm.targetKeys.push(transformObjectArray.targetKey);
+      cm.nestedTargetKeys.push(transformObjectArray.targetKey);
 
       //compile nested mapping
       const compiledNestedMapping = compileMappings(
         transformObjectArray.nestedMapping as Mapping<unknown, unknown, MapAll>
       );
 
-      cm.targetKeyToNestedMapping[key] = compiledNestedMapping;
-      cm.sourceKeyToNestedMapping[transformObjectArray.targetKey] = compiledNestedMapping;
+      cm.sourceKeyToNestedMapping[key] = compiledNestedMapping;
+      cm.targetKeyToNestedMapping[transformObjectArray.targetKey] = compiledNestedMapping;
       continue;
     }
 
@@ -63,28 +63,28 @@ export const compileMappings = <A, E, MapAll>(mapping: Mapping<A, E, MapAll>): C
       //transform nested object
       const transformNestedObject = keyMapping as TransformNestedObject<string, unknown>;
       //map nested object key to entity's counterpart
-      cm.targetKeyToSourceKeyMap[key] = transformNestedObject.targetKey;
-      cm.sourceKeyToTargetKeyMap[transformNestedObject.targetKey] = key;
+      cm.sourceKeyToSourceKeyMap[key] = transformNestedObject.targetKey;
+      cm.targetKeyToTargetKeyMap[transformNestedObject.targetKey] = key;
       //entity keys
-      cm.sourceKeys.push(transformNestedObject.targetKey);
-      cm.nestedSourceKeys.push(transformNestedObject.targetKey);
+      cm.targetKeys.push(transformNestedObject.targetKey);
+      cm.nestedTargetKeys.push(transformNestedObject.targetKey);
 
       //compile nested mapping
       const compiledNestedMapping = compileMappings(
         transformNestedObject.nestedMapping as Mapping<unknown, unknown, MapAll>
       );
 
-      cm.targetKeyToNestedMapping[key] = compiledNestedMapping;
-      cm.sourceKeyToNestedMapping[transformNestedObject.targetKey] = compiledNestedMapping;
+      cm.sourceKeyToNestedMapping[key] = compiledNestedMapping;
+      cm.targetKeyToNestedMapping[transformNestedObject.targetKey] = compiledNestedMapping;
 
       continue;
     }
 
     //default, no transformation function
-    cm.targetKeyToSourceKeyMap[key] = keyMapping as string;
-    cm.sourceKeyToTargetKeyMap[keyMapping as string] = key;
+    cm.sourceKeyToSourceKeyMap[key] = keyMapping as string;
+    cm.targetKeyToTargetKeyMap[keyMapping as string] = key;
     //entity key
-    cm.sourceKeys.push(keyMapping as string);
+    cm.targetKeys.push(keyMapping as string);
   }
 
   return cm;

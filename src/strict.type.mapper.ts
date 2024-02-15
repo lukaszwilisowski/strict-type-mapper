@@ -75,7 +75,7 @@ export class StrictTypeMapper<
   private mapInternal<A, B>(input: A, mapping: CompiledMapping, reversed?: boolean): B {
     const mappedOutput: { [k: string]: unknown } = {};
 
-    const keyMap = reversed ? mapping.sourceKeyToTargetKeyMap : mapping.targetKeyToSourceKeyMap;
+    const keyMap = reversed ? mapping.targetKeyToTargetKeyMap : mapping.sourceKeyToSourceKeyMap;
 
     for (const key in keyMap) {
       const targetKey = keyMap[key];
@@ -96,7 +96,7 @@ export class StrictTypeMapper<
     //compute transformed value
     let transformedValue: unknown = value;
 
-    const nestedMapping = reversed ? mapping.sourceKeyToNestedMapping[key] : mapping.targetKeyToNestedMapping[key];
+    const nestedMapping = reversed ? mapping.targetKeyToNestedMapping[key] : mapping.sourceKeyToNestedMapping[key];
 
     if (nestedMapping) {
       if (transformedValue === null) {
@@ -115,8 +115,8 @@ export class StrictTypeMapper<
 
     //array transformation
     const arrayElementTansform = reversed
-      ? mapping.sourceElementKeyToFuncMap[key]
-      : mapping.targetElementKeyToFuncMap[key];
+      ? mapping.targetElementKeyToFuncMap[key]
+      : mapping.sourceElementKeyToFuncMap[key];
 
     if (arrayElementTansform) {
       if (transformedValue === null) {
@@ -133,7 +133,7 @@ export class StrictTypeMapper<
 
     //primitive transformation
     const transform =
-      (reversed ? mapping.sourceKeyToFuncMap[key] : mapping.targetKeyToFuncMap[key]) || //transform found?
+      (reversed ? mapping.targetKeyToFuncMap[key] : mapping.sourceKeyToFuncMap[key]) || //transform found?
       ((i: unknown) => i); //if not, fallback to no-transformation
 
     transformedValue = Array.isArray(transformedValue)

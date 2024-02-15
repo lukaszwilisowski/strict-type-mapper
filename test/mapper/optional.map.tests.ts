@@ -63,7 +63,7 @@ describe('Optional mapper', () => {
   });
 
   it('should return partial input keys', () => {
-    const sourceKeys = optionalMapper.getCompiledMapping().sourceKeys;
+    const sourceKeys = optionalMapper.getCompiledMapping().targetKeys;
 
     expect(sourceKeys).toContain('name');
     expect(sourceKeys).toContain('name2');
