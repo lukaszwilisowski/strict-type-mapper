@@ -19,7 +19,7 @@ If you want to see the TypeScript magic, please check those files:
 npm install strict-type-mapper
 ```
 
-## 2 Simple type mapping
+## 2 Simple type mapping with transofmrations
 
 Note: When initializing StrictTypeMapper, **always provide** explicit `Source` and
 `Target` type parameters.
@@ -73,7 +73,7 @@ const mapping: Mapping<Source, Target> = {
 };
 ```
 
-## 3. Transformations
+## 3. `mapReverse()` and transformations
 
 You can also provide transformation functions to map properties and reverse transformations using [MapTo() utility functions](https://github.com/lukaszwilisowski/strict-type-mapper/blob/main/src/helpers/map.to.helper.ts).
 
@@ -82,72 +82,43 @@ Remember to **exclude** `undefined` checks (even if type is optional), because t
 `Null` is treated as a valid value, so you need to handle it explicitly.
 
 ```typescript
-type Source = {
-  sourceName?: string | null;
-  sourceAge: number;
-};
+type A = { a: number; b: string; c: boolean };
+type B = { a: number; b: string; c: string };
 
-type Target = {
-  sourceName?: string | null;
-  targetAge: number;
-};
-
-const mapping: Mapping<Source, Target> = {
-  sourceName: MapTo.Property(
-    'sourceName',
-    (sourceName: string | null): string | null => sourceName?.toUpperCase() || 'AA',
-    (targetName: string | null): string | null => targetName?.toLowerCase() || 'BB'
+const mapping: Mapping<A, B> = {
+  a: 'a',
+  b: MapTo.Property(
+    'b',
+    (sourceB: string) => sourceB.toUpperCase(),
+    (targetB: string) => targetB.toLowerCase()
   ),
-  sourceAge: MapTo.Property(
-    'targetAge',
-    (sourceAge: number): number => sourceAge + 1,
-    (targetAge: number): number => targetAge - 1
+  c: MapTo.Property(
+    'c',
+    (sourceC: boolean) => (sourceC ? 'true' : 'false'),
+    (targetC: string) => targetC === 'true'
   )
 };
 
-const typeMapper = new StrictTypeMapper<Source, Target>(mapping);
+const typeMapper = new StrictTypeMapper<A, B>(mapping);
 
 const target = typeMapper.map({
-  sourceName: null,
-  sourceAge: 21
+  a: 1,
+  b: 'hello',
+  c: true
 });
 
-expect(target.sourceName).toEqual('AA');
-expect(target.targetAge).toBe(22);
+expect(target.a).toBe(1);
+expect(target.b).toEqual('HELLO');
+expect(target.c).toBe('true');
+
+const source = typeMapper.mapReverse(target);
+
+expect(source.a).toBe(1);
+expect(source.b).toEqual('hello');
+expect(source.c).toBe(true);
 ```
 
-## 4. Reverse mapping
-
-Use it when you want to map from `Target` to `Source` type.
-
-```typescript
-type Source = {
-  sourceName: string;
-  sourceAge: number;
-};
-
-type Target = {
-  targetName: string;
-  targetAge: number;
-};
-
-const mapping: Mapping<Source, Target> = {
-  sourceName: 'targetName',
-  sourceAge: 'targetAge'
-};
-
-const typeMapper = new StrictTypeMapper<Source, Target>(mapping);
-
-const source = typeMapper.mapReverse({
-  targetName: 'Jack',
-  targetAge: 21
-});
-
-expect(source.sourceName).toEqual('Jack');
-expect(source.sourceAge).toBe(21);
-```
-
-## 5. Complex and nested type mapping
+## 4. Complex and nested type mapping
 
 Use it when you want to map complex and nested types. Example type:
 
@@ -191,8 +162,8 @@ Example complex mapping:
 export const additionalMapping: Mapping<AdditionalObject, AdditionalObject> = {
   serialNumber: MapTo.Property(
     'serialNumber',
-    (outputSN: string) => outputSN + '_new',
-    (inputSN: string) => inputSN.replace('_new', '')
+    (sourceSN: string) => sourceSN + '_new',
+    (targetSN: string) => targetSN.replace('_new', '')
   ),
   index: 'index'
 };
@@ -200,8 +171,8 @@ export const additionalMapping: Mapping<AdditionalObject, AdditionalObject> = {
 export const friendMapping: Mapping<FriendObject, FriendObject> = {
   age: MapTo.Property(
     'age',
-    (outputAge: number) => outputAge + 1,
-    (inputAge: number) => inputAge - 1
+    (sourceAge: number) => sourceAge + 1,
+    (targetAge: number) => targetAge - 1
   ),
   name: 'name',
   level: 'level'
@@ -210,13 +181,13 @@ export const friendMapping: Mapping<FriendObject, FriendObject> = {
 export const featuresMapping: Mapping<FeaturesObject, FeaturesObject> = {
   color: MapTo.Property(
     'color',
-    (outputColor: string) => outputColor + '_changed',
-    (inputColor: string) => inputColor.replace('_changed', '')
+    (sourceColor: string) => sourceColor + '_changed',
+    (targetColor: string) => targetColor.replace('_changed', '')
   ),
   level: MapTo.Property(
     'level',
-    (outputLevel: number) => outputLevel + 3,
-    (inputLevel: number) => inputLevel - 3
+    (sourceLevel: number) => sourceLevel + 3,
+    (targetLevel: number) => targetLevel - 3
   ),
   additional: MapTo.NestedObject('additional', additionalMapping)
 };
@@ -227,23 +198,23 @@ export const complexMapping: Mapping<AnimalObject, MappedAnimalObject> = {
   name3: 'name',
   nameNullable: MapTo.Property(
     'nameNullable',
-    (outputName: string) => outputName.toUpperCase(),
-    (inputName: string) => inputName.toLowerCase()
+    (sourceName: string) => sourceName.toUpperCase(),
+    (targetName: string) => targetName.toLowerCase()
   ),
   age: MapTo.Property(
     'age',
-    (outputAge: number) => outputAge + 1,
-    (inputAge: number) => inputAge - 1
+    (sourceAge: number) => sourceAge + 1,
+    (targetAge: number) => targetAge - 1
   ),
   ageNullable: MapTo.Property(
     'age_nullable',
-    (outputAge: number | null): number | null => outputAge || 0,
-    (inputAge: number | null): number | null => inputAge || 0
+    (sourceAge: number | null): number | null => sourceAge || 0,
+    (targetAge: number | null): number | null => targetAge || 0
   ),
   friendIDsNullable: MapTo.Array(
     'friendIDsNullable',
-    (outputFriendId: number) => -outputFriendId,
-    (inputFriendId: number) => -inputFriendId
+    (sourceFriendId: number) => -sourceFriendId,
+    (targetFriendId: number) => -targetFriendId
   ),
   friends: MapTo.ObjectArray('friends', friendMapping),
   friendsNullable: MapTo.ObjectArray('friends_nullable', friendMapping),
@@ -253,7 +224,7 @@ export const complexMapping: Mapping<AnimalObject, MappedAnimalObject> = {
 };
 ```
 
-## 6. Partial mapping
+## 5. Partial mapping
 
 In principle you should map all properties, to make sure the types are correct. If you want to make some properties optional, add `?` to their type definition (for both `Source` and `Target` types).
 
@@ -268,18 +239,18 @@ export const partialMapping: Mapping<PartialAnimal, MappedAnimalObject> = {
   name3: 'name',
   nameNullable: MapTo.Property(
     'nameNullable',
-    (outputName: string) => outputName.toUpperCase(),
-    (inputName: string) => inputName.toLowerCase()
+    (sourceName: string) => sourceName.toUpperCase(),
+    (targetName: string) => targetName.toLowerCase()
   ),
   age: MapTo.Property(
     'age',
-    (outputAge: number) => outputAge + 1,
-    (inputAge: number) => inputAge - 1
+    (sourceAge: number) => sourceAge + 1,
+    (targetAge: number) => targetAge - 1
   )
 };
 ```
 
-## 7. Optional mapping
+## 6. Optional mapping
 
 In rare cases when you want to make all mappings **optional**, set the 3rd type parameter of `Mapping` and `StrictTypeMapper` to `false`.
 
@@ -290,20 +261,20 @@ export const optionalMapping: Mapping<AnimalObject, MappedAnimalObject, false> =
   name3: 'name',
   nameNullable: MapTo.Property(
     'nameNullable',
-    (outputName: string) => outputName.toUpperCase(),
-    (inputName: string) => inputName.toLowerCase()
+    (sourceName: string) => sourceName.toUpperCase(),
+    (targetName: string) => targetName.toLowerCase()
   ),
   age: MapTo.Property(
     'age',
-    (outputAge: number) => outputAge + 1,
-    (inputAge: number) => inputAge - 1
+    (sourceAge: number) => sourceAge + 1,
+    (targetAge: number) => targetAge - 1
   )
 };
 ```
 
 The `false` type parameter will change the output types to `Partial<Source>` and `Partial<Target>`.
 
-## 8. Mapping details:
+## 7. Mapping details:
 
 Sometimes you may want to get all mapping details, for example to check if all properties are mapped correctly.
 

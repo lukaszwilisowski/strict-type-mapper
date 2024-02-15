@@ -31,14 +31,32 @@ describe('Simple mapper', () => {
     expect(target.targetAge).toBe(21);
   });
 
-  it('should not map wrong properties', () => {
+  it('should not map wrong types', () => {
     type Source = {
       sourceName?: string;
       sourceAge: number;
     };
 
     type Target = {
-      targetName: string; //ERROR! this needs to be optional to be mappable to sourceName
+      targetName: string;
+      targetAge: number;
+    };
+
+    const mapping: Mapping<Source, Target> = {
+      // @ts-expect-error
+      sourceName: 'targetName', //the same optionality required
+      sourceAge: 'targetAge'
+    };
+  });
+
+  it('should not map wrong types 2', () => {
+    type Source = {
+      sourceName: string;
+      sourceAge: number;
+    };
+
+    type Target = {
+      targetName?: string; //the same optionality required
       targetAge: number;
     };
 
@@ -144,13 +162,13 @@ describe('Simple mapper', () => {
     const mapping: Mapping<Source, Target> = {
       sourceName: MapTo.Property(
         'sourceName',
-        (sourceName: string | null): string | null => sourceName?.toUpperCase() || 'AA',
-        (targetName: string | null): string | null => targetName?.toLowerCase() || 'BB'
+        (sourceName: string | null): string | null => sourceName || 'AA',
+        (targetName: string | null): string | null => targetName || 'BB'
       ),
       sourceAge: MapTo.Property(
         'targetAge',
-        (sourceAge: number): number => sourceAge + 1,
-        (targetAge: number): number => targetAge - 1
+        (sourceAge: number) => sourceAge + 1,
+        (targetAge: number) => targetAge - 1
       )
     };
 
@@ -163,5 +181,74 @@ describe('Simple mapper', () => {
 
     expect(target.sourceName).toEqual('AA');
     expect(target.targetAge).toBe(22);
+  });
+
+  it('should map with transformations 2', () => {
+    type A = { a: number; b: string; c: boolean };
+    type B = { a: number; b: string; c: string };
+
+    const mapping: Mapping<A, B> = {
+      a: 'a',
+      b: MapTo.Property(
+        'b',
+        (sourceB: string) => sourceB.toUpperCase(),
+        (targetB: string) => targetB.toLowerCase()
+      ),
+      c: MapTo.Property(
+        'c',
+        (sourceC: boolean) => (sourceC ? 'true' : 'false'),
+        (targetC: string) => targetC === 'true'
+      )
+    };
+
+    const typeMapper = new StrictTypeMapper<A, B>(mapping);
+
+    const target = typeMapper.map({
+      a: 1,
+      b: 'hello',
+      c: true
+    });
+
+    expect(target.a).toBe(1);
+    expect(target.b).toEqual('HELLO');
+    expect(target.c).toBe('true');
+
+    const source = typeMapper.mapReverse(target);
+
+    expect(source.a).toBe(1);
+    expect(source.b).toEqual('hello');
+    expect(source.c).toBe(true);
+  });
+
+  it('should map with transformations and undefined', () => {
+    type A = { b?: string; c?: boolean };
+    type B = { b?: string; c?: string };
+
+    const mapping: Mapping<A, B> = {
+      b: MapTo.Property(
+        'b',
+        (sourceB: string) => sourceB.toUpperCase(),
+        (targetB: string) => targetB.toLowerCase()
+      ),
+      c: MapTo.Property(
+        'c',
+        (sourceC: boolean) => (sourceC ? 'true' : 'false'),
+        (targetC: string) => targetC === 'true'
+      )
+    };
+
+    const typeMapper = new StrictTypeMapper<A, B>(mapping);
+
+    const target = typeMapper.map({
+      c: true
+    });
+
+    expect(target.b).toBeUndefined();
+    expect(target.c).toBe('true');
+
+    const source = typeMapper.mapReverse(target);
+
+    expect(source.b).toBeUndefined();
+    expect(source.c).toBe(true);
   });
 });

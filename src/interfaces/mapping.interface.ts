@@ -1,4 +1,4 @@
-import { NonNullablePropsOf, NonUndefined, PrimitiveTypes } from 'helpers/helper.types';
+import { NonNullablePropsOf, NonUndefined, PrimitiveTypes } from '../helpers/helper.types';
 import {
   TransformArray,
   TransformArrayOfObjects,
@@ -7,14 +7,35 @@ import {
 } from './mapping.transforms';
 
 /**
- * @type `MapAll` When set to `false`, allows to map a subset of properties.
- *
  * Strict type mapping of properties between `I` and `O` types. Designed for DB domain model mappings. Uses stricter type constraints than standard Typescript.
  *
  * 1. If you use name-to-name mapping, both properties must have exactly the same type and both must be either optional or non-optional.
  * 2. If you map properties with different types you need to use MapTo helper functions and provide custom transformations. There is only one constraint: both properties must be either optional or non-optional.
  * 3. When you want to map a nested object, you must use `MapTo.NestedObject`, with nested mapping.
  * 4. When you want to map an array of objects, you must use `MapTo.ObjectArray`, with nested mapping.
+ *
+ * @type `MapAll` when set to `false`, allows to map a subset of properties.
+ *
+ * @example
+ * ```ts
+  type A = { a: number; b: string; c: boolean };
+  type B = { a: number; b: string; c: string };
+
+  const mapping: Mapping<A, B> = {
+      a: 'a',
+      b: MapTo.Property(
+        'b',
+        (sourceB: string) => sourceB.toUpperCase(),
+        (targetB: string) => targetB.toLowerCase()
+      ),
+      c: MapTo.Property(
+        'c',
+        (sourceC: boolean) => (sourceC ? 'true' : 'false'),
+        (targetC: string) => targetC === 'true'
+      )
+  };
+
+ * ```
  */
 export type Mapping<I, O, MapAll = true> = MapAll extends true
   ? {
@@ -36,13 +57,15 @@ type MappedType<I, O, P extends keyof I, MapAll> = keyof O extends infer R
     : never
   : never;
 
-type PrimitiveCompatibleTypes<I, O, P extends keyof I, R extends keyof O> = I[P] extends PrimitiveTypes | undefined
+type PrimitiveCompatibleTypes<I, O, P extends keyof I, R extends keyof O> = O[R] extends PrimitiveTypes | undefined
   ? I[P] extends PrimitiveTypes
-    ? O[R] extends PrimitiveTypes | object //special case for MongoDb Object id mapping
+    ? O[R] extends PrimitiveTypes
       ? PropertyCompatibleTypes<I, O, P, R, I[P], O[R]>
       : never
-    : O[R] extends PrimitiveTypes | undefined
-    ? PropertyCompatibleTypes<I, O, P, R, NonUndefined<I[P]>, NonUndefined<O[R]>>
+    : I[P] extends PrimitiveTypes | undefined
+    ? O[R] extends PrimitiveTypes
+      ? never
+      : PropertyCompatibleTypes<I, O, P, R, NonUndefined<I[P]>, NonUndefined<O[R]>>
     : never
   : //fallback
     never;

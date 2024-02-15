@@ -11,64 +11,169 @@ import {
 } from '../_models/animal.models';
 
 describe('Mapping', () => {
-  it('should work for standard properties', () => {
-    const mapping: Mapping<AnimalObject, MappedAnimalObject, false> = {
-      name: 'name',
-      age: 'age'
+  it('should work with two properties of the same type', () => {
+    type A = { a: number };
+    type B = { b: number };
+
+    const mapping: Mapping<A, B> = {
+      a: 'b'
     };
   });
 
-  it('should not work when mapping standard property to nullable property', () => {
-    const mapping: Mapping<AnimalObject, MappedAnimalObject, false> = {
+  it('should work with two nullable properties', () => {
+    type A = { a: number | null };
+    type B = { b: number | null };
+
+    const mapping: Mapping<A, B> = {
+      a: 'b'
+    };
+  });
+
+  it('should work with two optional properties', () => {
+    type A = { a?: number };
+    type B = { b?: number };
+
+    const mapping: Mapping<A, B> = {
+      a: 'b'
+    };
+  });
+
+  it('should work with two optional nullable properties', () => {
+    type A = { a?: string | null };
+    type B = { b?: string | null };
+
+    const mapping: Mapping<A, B> = {
+      a: 'b'
+    };
+  });
+
+  it('should work with different properties of the same type', () => {
+    type A = { a: number };
+    type B = { b: number };
+
+    const mapping: Mapping<A, B> = {
+      a: 'b'
+    };
+  });
+
+  it('should not work when mapping standard property to optional property', () => {
+    type A = { a: number };
+    type B = { b?: number };
+
+    const mapping: Mapping<A, B> = {
       // @ts-expect-error
-      name: 'nameNullable'
+      a: 'b'
+    };
+  });
+
+  it('should not work when mapping optional property to standard property', () => {
+    type A = { a?: number };
+    type B = { b: number };
+
+    const mapping: Mapping<A, B> = {
+      // @ts-expect-error
+      a: 'b'
+    };
+  });
+
+  it('should not work when mapping optional property to optional property', () => {
+    type A = { a: number | null };
+    type B = { b?: number };
+
+    const mapping: Mapping<A, B> = {
+      // @ts-expect-error
+      a: 'b'
+    };
+  });
+
+  it('should not work when mapping optional property to nullable property', () => {
+    type A = { a?: number };
+    type B = { b: number | null };
+
+    const mapping: Mapping<A, B> = {
+      // @ts-expect-error
+      a: 'b'
     };
   });
 
   it('should work with transformed property', () => {
-    const mapping: Mapping<AnimalObject, MappedAnimalObject, false> = {
-      name: 'name',
-      age: MapTo.Property(
-        'age',
-        (objectAge: number) => objectAge,
-        (entityAge: number) => entityAge
+    type A = { a: string };
+    type B = { b: number };
+
+    const mapping: Mapping<A, B> = {
+      a: MapTo.Property(
+        'b',
+        (sourceB: string) => parseInt(sourceB),
+        (targetB: number) => targetB.toString().toLowerCase()
       )
     };
   });
 
-  it('should work with property transformed to different property', () => {
-    const mapping: Mapping<AnimalObject, MappedAnimalObject, false> = {
-      name: 'name',
-      age: MapTo.Property(
-        'name',
-        (objectAge: number) => objectAge?.toString() || 'default',
-        (entityName: string) => parseInt(entityName)
+  it('should work with optional transformed properties', () => {
+    type A = { a?: string };
+    type B = { b?: number };
+
+    const mapping: Mapping<A, B> = {
+      a: MapTo.Property(
+        'b',
+        (sourceB: string) => parseInt(sourceB),
+        (targetB: number) => targetB.toString().toLowerCase()
       )
     };
   });
 
-  it('should work with nullable property', () => {
-    const mapping: Mapping<AnimalObject, MappedAnimalObject, false> = {
-      ageNullable: 'age_nullable'
-    };
-  });
+  it('should work with transformed property with selection', () => {
+    type A = { a: string; a2: number };
+    type B = { b: number; b2: string };
 
-  it('should work with nullable transformed property', () => {
-    const mapping: Mapping<AnimalObject, MappedAnimalObject, false> = {
-      ageNullable: MapTo.Property(
-        'age_nullable',
-        (objectAge: number | null): number | null => objectAge,
-        (entityAge: number | null): number | null => entityAge || 0
+    const mapping: Mapping<A, B> = {
+      a: MapTo.Property(
+        'b2',
+        (sourceB: string) => sourceB,
+        (targetB: string) => targetB
+      ),
+      a2: MapTo.Property(
+        'b',
+        (sourceB: number) => sourceB,
+        (targetB: number) => targetB
       )
     };
   });
 
-  it('should work with nullable property transformed to different property', () => {
-    const mapping: Mapping<AnimalObject, MappedAnimalObject, false> = {
-      ageNullable: MapTo.Property(
-        'nameNullable',
-        (objectAge: number | null): string => objectAge?.toString() || '5',
-        (entityAge: string): number | null => parseInt(entityAge || '1')
+  it('should not work when transforming non-optional property to optional property', () => {
+    type A = { a: string; a2: string };
+    type B = { b?: number; b2: number };
+
+    const mapping: Mapping<A, B> = {
+      // @ts-expect-error
+      a: MapTo.Property(
+        'b',
+        (a: string) => parseInt(a),
+        (b: number) => b.toString()
+      ),
+      a2: MapTo.Property(
+        'b2',
+        (a2: string) => parseInt(a2),
+        (b2: number) => b2.toString()
+      )
+    };
+  });
+
+  it('should not work when transforming optional property to non-optional property', () => {
+    type A = { a?: string; a2: string };
+    type B = { b: number; b2: number };
+
+    const mapping: Mapping<A, B> = {
+      // @ts-expect-error
+      a: MapTo.Property(
+        'b',
+        (a: string) => parseInt(a),
+        (b: number) => b.toString()
+      ),
+      a2: MapTo.Property(
+        'b2',
+        (a2: string) => parseInt(a2),
+        (b2: number) => b2.toString()
       )
     };
   });
@@ -195,10 +300,10 @@ describe('Mapping', () => {
   });
 
   it('should not work with incomplete mapping', () => {
+    // @ts-expect-error
     const featuresMapping: Mapping<FeaturesObject, FeaturesObject> = {
       color: 'color',
-      level: 'level',
-      additional: 'additional'
+      level: 'level'
     };
   });
 
@@ -217,8 +322,8 @@ describe('Mapping', () => {
 
   it('should not work with nested nullable object, incompatible types', () => {
     const additionalMapping: Mapping<AdditionalObject, AdditionalObject> = {
-      serialNumber: 'serialNumber',
-      index: 'index'
+      serialNumber: 'index',
+      index: 'serialNumber'
     };
 
     const featuresMapping: Mapping<FeaturesObject, FeaturesObject> = {
