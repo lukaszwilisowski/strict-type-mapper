@@ -57,13 +57,16 @@ type MappedType<I, O, P extends keyof I, MapAll> = keyof O extends infer R
     : never
   : never;
 
-type PrimitiveCompatibleTypes<I, O, P extends keyof I, R extends keyof O> = O[R] extends PrimitiveTypes | undefined
+type PrimitiveCompatibleTypes<I, O, P extends keyof I, R extends keyof O> = O[R] extends
+  | PrimitiveTypes
+  | object
+  | undefined
   ? I[P] extends PrimitiveTypes
-    ? O[R] extends PrimitiveTypes
+    ? O[R] extends PrimitiveTypes | object
       ? PropertyCompatibleTypes<I, O, P, R, I[P], O[R]>
       : never
     : I[P] extends PrimitiveTypes | undefined
-    ? O[R] extends PrimitiveTypes
+    ? O[R] extends PrimitiveTypes | object
       ? never
       : PropertyCompatibleTypes<I, O, P, R, NonUndefined<I[P]>, NonUndefined<O[R]>>
     : never

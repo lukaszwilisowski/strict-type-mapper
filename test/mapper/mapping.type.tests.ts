@@ -648,4 +648,108 @@ describe('Mapping', () => {
       a: MapTo.ObjectArray('b', nestedMapping)
     };
   });
+
+  it('should not work with primitive and object', () => {
+    type A = { a: number };
+    type B = { b: object };
+
+    const mapping: Mapping<A, B> = {
+      // @ts-expect-error
+      a: 'b'
+    };
+  });
+
+  it('should work with primitive and object with transformation', () => {
+    class C {
+      constructor(a: string) {}
+    }
+
+    type A = { a: string };
+    type B = { b: C };
+
+    const mapping: Mapping<A, B> = {
+      a: MapTo.Property(
+        'b',
+        (a: string) => new C(a),
+        (b: C) => b.toString()
+      )
+    };
+  });
+
+  it('should work with optional primitive and object with transformation', () => {
+    class C {
+      constructor(a: string) {}
+    }
+
+    type A = { a?: string };
+    type B = { b?: C };
+
+    const mapping: Mapping<A, B> = {
+      a: MapTo.Property(
+        'b',
+        (a: string) => new C(a),
+        (b: C) => b.toString()
+      )
+    };
+  });
+
+  it('should not work when transforming optional primitive to non-optional object', () => {
+    class C {
+      constructor(a: string) {}
+    }
+
+    type A = { a?: C };
+    type B = { b: string };
+
+    const mapping1: Mapping<A, B> = {
+      // @ts-expect-error
+      a: MapTo.Property(
+        'b',
+        (a: C) => a.toString(),
+        (b: string) => new C(b)
+      )
+    };
+
+    type E = { e?: string };
+    type F = { f: C };
+
+    const mapping2: Mapping<E, F> = {
+      // @ts-expect-error
+      e: MapTo.Property(
+        'f',
+        (e: string) => new C(e),
+        (f: C) => f.toString()
+      )
+    };
+  });
+
+  it('should not work when transforming non-optional primitive to optional object', () => {
+    class C {
+      constructor(a: string) {}
+    }
+
+    type A = { a: string };
+    type B = { b?: C };
+
+    const mapping1: Mapping<A, B> = {
+      // @ts-expect-error
+      a: MapTo.Property(
+        'b',
+        (a: string) => new C(a),
+        (b: C) => b.toString()
+      )
+    };
+
+    type E = { e: C };
+    type F = { f?: string };
+
+    const mapping2: Mapping<E, F> = {
+      // @ts-expect-error
+      e: MapTo.Property(
+        'f',
+        (e: C) => e.toString(),
+        (f: string) => new C(f)
+      )
+    };
+  });
 });

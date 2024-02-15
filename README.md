@@ -57,8 +57,8 @@ type Target = {
 
 const mapping: Mapping<Source, Target> = {
   // @ts-expect-error
-  name: 'targetName',
-  age: 'targetAge'
+  name: 'name',
+  age: 'age'
 };
 ```
 
@@ -77,14 +77,14 @@ Use `map()` function to map `Source` to `Target` type.
 
 ```typescript
 const source: Source = {
-  sourceName: 'Jack',
-  sourceAge: 21
+  name: 'Jack',
+  age: 21
 };
 
 const target = typeMapper.map(source);
 
-expect(target.targetName).toEqual('Jack');
-expect(target.targetAge).toBe(21);
+expect(target.name).toEqual('Jack');
+expect(target.age).toBe(21);
 ```
 
 Use `mapReverse()` function to map `Target` to `Source` type.
