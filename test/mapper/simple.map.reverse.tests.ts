@@ -115,8 +115,8 @@ describe('Simple mapper', () => {
     >({
       name: MapTo.Property(
         'name',
-        (inputName: string | null): string | null => inputName?.toUpperCase() || 'AA',
-        (outputName: string | null): string | null => outputName?.toLowerCase() || 'BB'
+        (sourceName: string | null): string | null => sourceName?.toUpperCase() || 'AA',
+        (targetName: string | null): string | null => targetName?.toLowerCase() || 'BB'
       ),
       age: 'age'
     });
